@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eurobot Map Randomizer</title>
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Randomize Eurobot map slots quickly on desktop and mobile.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Eurobot Map">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon-192.svg">
+    <style>
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #mapCanvas {
+            position: fixed;
+            inset: 4px;
+            width: calc(100vw - 8px);
+            height: calc(100vh - 8px);
+            height: calc(100dvh - 8px);
+            display: block;
+            touch-action: none;
+        }
+
+        button {
+            position: fixed;
+            left: 50%;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+            transform: translateX(-50%);
+            z-index: 10;
+            border: 0;
+            border-radius: 999px;
+            padding: 12px 18px;
+            font-size: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mapCanvas"></canvas>
+    <button onclick="randomizeMap()">Randomize Map</button>
+    <script>
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+        const mapImage = new Image();
+        mapImage.src = 'map.png';
+        const teamColors = ['#ffd400', '#2f6fff'];
+        // Normalized values: x/y/w/h are in 0..1 relative to map image area.
+        const rectangleSlots = [
+            // Lot 1
+            { x: 0.15, y: 0.05, w: 0.025, h: 0.035 },
+            { x: 0.175, y: 0.05, w: 0.025, h: 0.035 },
+            { x: 0.20, y: 0.05, w: 0.025, h: 0.035 },
+            { x: 0.225, y: 0.05, w: 0.025, h: 0.035 },
+            // Lot 2
+            { x: 0.15+0.4, y: 0.05, w: 0.025, h: 0.035 },
+            { x: 0.175+0.4, y: 0.05, w: 0.025, h: 0.035 },
+            { x: 0.20+0.4, y: 0.05, w: 0.025, h: 0.035 },
+            { x: 0.225+0.4, y: 0.05, w: 0.025, h: 0.035 },
+             // Lot 3
+            { x: 0.15, y: 0.05 + 0.865, w: 0.025, h: 0.035 },
+            { x: 0.175, y: 0.05 + 0.865, w: 0.025, h: 0.035 },
+            { x: 0.20, y: 0.05 + 0.865, w: 0.025, h: 0.035 },
+            { x: 0.225, y: 0.05 + 0.865, w: 0.025, h: 0.035 },
+             // Lot 4
+            { x: 0.15+0.4, y: 0.05 + 0.865, w: 0.025, h: 0.035 },
+            { x: 0.175+0.4, y: 0.05 + 0.865, w: 0.025, h: 0.035 },
+            { x: 0.20+0.4, y: 0.05 + 0.865, w: 0.025, h: 0.035 },
+            { x: 0.225+0.4, y: 0.05 + 0.865, w: 0.025, h: 0.035 },
+            // Lot 5
+            { x: 0.365, y:0.35, w: 0.07, h: 0.02 },
+            { x: 0.365, y:0.37, w: 0.07, h: 0.02 },
+            { x: 0.365, y:0.39, w: 0.07, h: 0.02 },
+            { x: 0.365, y:0.41, w: 0.07, h: 0.02 },
+            // Lot 6
+            { x: 0.365, y:0.35 + 0.23, w: 0.07, h: 0.02 },
+            { x: 0.365, y:0.37 + 0.23, w: 0.07, h: 0.02 },
+            { x: 0.365, y:0.39 + 0.23, w: 0.07, h: 0.02 },
+            { x: 0.365, y:0.41 + 0.23, w: 0.07, h: 0.02 },
+            // Lot 7
+            { x: 0.365-0.31, y:0.35 - 0.015, w: 0.07, h: 0.02 },
+            { x: 0.365-0.31, y:0.37- 0.015, w: 0.07, h: 0.02 },
+            { x: 0.365-0.31, y:0.39- 0.015, w: 0.07, h: 0.02 },
+            { x: 0.365-0.31, y:0.41- 0.015, w: 0.07, h: 0.02 },
+            // Lot 8
+            { x: 0.365-0.31, y:0.35 + 0.25, w: 0.07, h: 0.02 },
+            { x: 0.365-0.31, y:0.37 + 0.25, w: 0.07, h: 0.02 },
+            { x: 0.365-0.31, y:0.39 + 0.25, w: 0.07, h: 0.02 },
+            { x: 0.365-0.31, y:0.41 + 0.25, w: 0.07, h: 0.02 },
+            
+        ];
+        const rectangles = rectangleSlots.map((slot, index) => ({
+            ...slot,
+            color: teamColors[index % 2]
+        }));
+
+        function randomTeamColor() {
+            return teamColors[Math.floor(Math.random() * teamColors.length)];
+        }
+
+        function randomizeRectangles() {
+            rectangles.forEach((rect) => {
+                rect.color = randomTeamColor();
+            });
+        }
+
+        function drawMap() {
+            if (!mapImage.complete || mapImage.naturalWidth === 0 || mapImage.naturalHeight === 0) {
+                return;
+            }
+
+            const viewportWidth = canvas.clientWidth;
+            const viewportHeight = canvas.clientHeight;
+            const scale = Math.min(
+                viewportWidth / mapImage.naturalWidth,
+                viewportHeight / mapImage.naturalHeight
+            );
+            const drawWidth = mapImage.naturalWidth * scale;
+            const drawHeight = mapImage.naturalHeight * scale;
+            const offsetX = (viewportWidth - drawWidth) / 2;
+            const offsetY = (viewportHeight - drawHeight) / 2;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+            ctx.drawImage(mapImage, offsetX, offsetY, drawWidth, drawHeight);
+            drawRectangles({ offsetX, offsetY, drawWidth, drawHeight });
+        }
+
+        function drawRectangles(layout) {
+            ctx.save();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#111';
+
+            rectangles.forEach((rect) => {
+                const x = layout.offsetX + rect.x * layout.drawWidth;
+                const y = layout.offsetY + rect.y * layout.drawHeight;
+                const w = rect.w * layout.drawWidth;
+                const h = rect.h * layout.drawHeight;
+
+                ctx.fillStyle = rect.color;
+                ctx.fillRect(x, y, w, h);
+                ctx.strokeRect(x, y, w, h);
+            });
+
+            ctx.restore();
+        }
+
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const viewportWidth = canvas.clientWidth;
+            const viewportHeight = canvas.clientHeight;
+
+            canvas.width = Math.round(viewportWidth * dpr);
+            canvas.height = Math.round(viewportHeight * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            drawMap();
+        }
+
+        function randomizeMap() {
+            randomizeRectangles();
+            drawMap();
+        }
+
+        mapImage.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', resizeCanvas);
+        resizeCanvas();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').catch((error) => {
+                    console.error('Service worker registration failed:', error);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
