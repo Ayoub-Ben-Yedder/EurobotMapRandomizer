@@ -35,14 +35,14 @@
         button {
             position: fixed;
             left: 50%;
-            bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 128px);
             transform: translateX(-50%);
             z-index: 10;
             border: 0;
             border-radius: 999px;
             padding: 12px 18px;
             font-size: 16px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.9);
             color: #fff;
         }
     </style>
@@ -55,7 +55,7 @@
         const ctx = canvas.getContext('2d');
         const mapImage = new Image();
         mapImage.src = 'map.png';
-        const teamColors = ['#ffd400', '#2f6fff'];
+        const teamColors = ['#f7b500', '#005b8c'];
         // Normalized values: x/y/w/h are in 0..1 relative to map image area.
         const rectangleSlots = [
             // Lot 1
