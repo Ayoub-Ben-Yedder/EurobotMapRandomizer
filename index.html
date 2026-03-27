@@ -98,7 +98,18 @@
             { x: 0.365-0.31, y:0.37 + 0.25, w: 0.07, h: 0.02 },
             { x: 0.365-0.31, y:0.39 + 0.25, w: 0.07, h: 0.02 },
             { x: 0.365-0.31, y:0.41 + 0.25, w: 0.07, h: 0.02 },
-            
+            // Lot 9
+            { x: 0.826, y:0.35, w: 0.07, h: 0.02 },
+            { x: 0.826, y:0.37, w: 0.07, h: 0.02 },
+            // Lot 10
+            { x: 0.85, y:0.43, w: 0.07, h: 0.02 },
+            { x: 0.85, y:0.45, w: 0.07, h: 0.02 },
+            // Lot 11
+            { x: 0.85, y:0.53, w: 0.07, h: 0.02 },
+            { x: 0.85, y:0.55, w: 0.07, h: 0.02 },
+            // Lot 12
+            { x: 0.826, y:0.615, w: 0.07, h: 0.02 },
+            { x: 0.826, y:0.635, w: 0.07, h: 0.02 },
         ];
         const rectangles = rectangleSlots.map((slot, index) => ({
             ...slot,
@@ -110,8 +121,44 @@
         }
 
         function randomizeRectangles() {
-            rectangles.forEach((rect) => {
-                rect.color = randomTeamColor();
+            // Randomize colors so each Lot has exactly half blue and half yellow
+            // Lots 1-8 have 4 slots each, Lots 9-12 have 2 slots each
+            const lotConfigs = [
+                { start: 0, count: 4 },   // Lot 1
+                { start: 4, count: 4 },   // Lot 2
+                { start: 8, count: 4 },   // Lot 3
+                { start: 12, count: 4 },  // Lot 4
+                { start: 16, count: 4 },  // Lot 5
+                { start: 20, count: 4 },  // Lot 6
+                { start: 24, count: 4 },  // Lot 7
+                { start: 28, count: 4 },  // Lot 8
+                { start: 32, count: 2 },  // Lot 9
+                { start: 34, count: 2 },  // Lot 10
+                { start: 36, count: 2 },  // Lot 11
+                { start: 38, count: 2 },  // Lot 12
+            ];
+            
+            lotConfigs.forEach((lot) => {
+                // Create an array with equal numbers of each color
+                const colors = [];
+                const halfCount = lot.count / 2;
+                for (let i = 0; i < halfCount; i++) {
+                    colors.push(teamColors[0]);
+                }
+                for (let i = 0; i < halfCount; i++) {
+                    colors.push(teamColors[1]);
+                }
+                
+                // Shuffle the colors
+                for (let i = colors.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [colors[i], colors[j]] = [colors[j], colors[i]];
+                }
+                
+                // Assign the shuffled colors to each slot in this lot
+                for (let i = 0; i < lot.count; i++) {
+                    rectangles[lot.start + i].color = colors[i];
+                }
             });
         }
 
